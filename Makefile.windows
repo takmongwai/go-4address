@@ -1,14 +1,13 @@
 #CGO_ENABLED=0
 #GOOS=windows|linux
 #GOARCH=386|amd64
-
+#-ldflags "-s -w"
 
 
 
 TOP_PKG=go-4address
 
 CC=llvm-gcc
-#GOPATH=$(shell pwd)
 PWD=$(shell pwd)
 GOCMD=CGO_ENABLED=0 GOOS=windows GOARCH=386 GOPATH=$(GOPATH):$(PWD) go
 GOBUILD=$(GOCMD) build
