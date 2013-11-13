@@ -4,7 +4,6 @@ package main
 query location from google maps
 */
 
-
 import (
   "bufio"
   "encoding/json"
@@ -58,22 +57,29 @@ func show_usage() {
 var (
   input_file  string
   output_file string
+  verbose     bool //  Make the operation more talkative
 )
 
 func main() {
+  var (
+    inf, ouf *os.File
+    err      error
+    outline  string
+    gmaps    GMap
+    line     string
+  )
+
   flag.Usage = show_usage
   flag.StringVar(&input_file, "i", "", `address file,split by '\n' `)
   flag.StringVar(&output_file, "o", "", `output file`)
+  flag.BoolVar(&verbose, "v", false, "Make the operation more talkative")
   flag.Parse()
 
   if len(input_file) == 0 || len(output_file) == 0 {
     fmt.Println("no input file or no output file.")
     os.Exit(1)
   }
-  var (
-    inf, ouf *os.File
-    err      error
-  )
+
   inf, err = os.Open(input_file)
   defer inf.Close()
 
@@ -91,23 +97,25 @@ func main() {
   }
 
   r := bufio.NewReader(inf)
-  var (
-    outline string
-    gmaps   GMap
-    line    string
-  )
   for {
     line, err = Readline(r)
     if err != nil {
       break
+    }
+    if verbose {
+      fmt.Printf("Query: %s\n", line)
     }
     gmaps, err = AddressToLocation(line)
     if err != nil {
       fmt.Fprintf(os.Stderr, "Query %s has error %v\n", line, err)
       continue
     }
-    outline = fmt.Sprintf("\"%s\",%f,%f\n", line, gmaps.Results[0].Geometry.Location.Lat, gmaps.Results[0].Geometry.Location.Lng)
-    ouf.Write([]byte(outline))
+    if gmaps.Status == "OK" && len(gmaps.Results) > 0 {
+      outline = fmt.Sprintf("\"%s\",%f,%f\n", line, gmaps.Results[0].Geometry.Location.Lat, gmaps.Results[0].Geometry.Location.Lng)
+    } else {
+      outline = fmt.Sprintf("\"%s\",0.00,0.00\n", line)
+    }
+    ouf.WriteString(outline)
   }
 }
 
