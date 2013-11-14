@@ -102,6 +102,9 @@ func main() {
     if err != nil {
       break
     }
+    if len(line) == 0 {
+      continue
+    }
     if verbose {
       fmt.Printf("Query: %s\n", line)
     }
